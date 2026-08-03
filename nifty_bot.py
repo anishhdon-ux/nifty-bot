@@ -47,6 +47,26 @@ def check_divergence(symbol):
         return None, None
 
 print("✅ Bot Started. Scanning NIFTY & BANKNIFTY only...")
+
+# =====================================================
+# 🔥 Render को Port देने के लिए Flask Server (बस ये 8 Lines)
+# =====================================================
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run_web():
+    app.run(host='0.0.0.0', port=8000)
+
+import threading
+threading.Thread(target=run_web, daemon=True).start()
+
+# =====================================================
+# 🚀 आपका पुराना Infinite Loop (बिल्कुल वैसा ही)
+# =====================================================
 while True:
     start = time.time()
     for symbol in TICKERS:
