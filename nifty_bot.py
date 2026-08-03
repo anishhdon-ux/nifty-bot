@@ -46,35 +46,38 @@ def check_divergence(symbol):
     except:
         return None, None
 
-print("✅ Bot Started. Scanning NIFTY & BANKNIFTY only...")
+# =====================================================
+# 🔥 Scanner Function (जो Background में चलेगा)
+# =====================================================
+def run_scanner():
+    print("✅ Scanner thread started. Scanning NIFTY & BANKNIFTY...")
+    while True:
+        start = time.time()
+        for symbol in TICKERS:
+            signal, price = check_divergence(symbol)
+            if signal:
+                name = "NIFTY 50" if symbol == "^NSEI" else "BANK NIFTY"
+                send_telegram_alert(name, signal, price, datetime.now().strftime('%H:%M'))
+                time.sleep(1)
+            time.sleep(0.3)
+        print(f"✅ Scanned in {time.time()-start:.1f}s. Waiting 5 min...")
+        time.sleep(300)
 
 # =====================================================
-# 🔥 Render को Port देने के लिए Flask Server (बस ये 8 Lines)
+# 🌐 Flask Server (Main Thread पर चलेगा)
 # =====================================================
 from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Bot is running!"
+    return "Bot is running! Scanner active."
 
-def run_web():
-    app.run(host='0.0.0.0', port=8000)
-
+# Scanner को Background Thread में Start करें
 import threading
-threading.Thread(target=run_web, daemon=True).start()
+scanner_thread = threading.Thread(target=run_scanner, daemon=True)
+scanner_thread.start()
 
-# =====================================================
-# 🚀 आपका पुराना Infinite Loop (बिल्कुल वैसा ही)
-# =====================================================
-while True:
-    start = time.time()
-    for symbol in TICKERS:
-        signal, price = check_divergence(symbol)
-        if signal:
-            name = "NIFTY 50" if symbol == "^NSEI" else "BANK NIFTY"
-            send_telegram_alert(name, signal, price, datetime.now().strftime('%H:%M'))
-            time.sleep(1)
-        time.sleep(0.3)
-    print(f"✅ Scanned in {time.time()-start:.1f}s. Waiting 5 min...")
-    time.sleep(300)
+# Flask Server को Main Thread पर चलाएँ (Render को Port दिखेगा)
+print("🚀 Starting Flask server on port 8000...")
+app.run(host='0.0.0.0', port=8000)
