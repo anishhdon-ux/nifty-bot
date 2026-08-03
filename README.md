@@ -1,1 +1,1 @@
-# nifty-bot
+python nifty_bot.py
